@@ -78,6 +78,14 @@ export function useCheckins() {
     return checkins.find(c => c.task_id === taskId && c.date === dateStr && c.item === '') || null
   }, [checkins])
 
+  // subitems(체크리스트) 기반 항목의 특정 item에 대한 checkin 조회 (승인 취소 시 id가 필요)
+  const checkinForItem = useCallback((taskId, item, weekDate) => {
+    const { start, end } = getWeekRange(weekDate)
+    const startStr = formatDate(start)
+    const endStr = formatDate(end)
+    return checkins.find(c => c.task_id === taskId && c.item === item && c.date >= startStr && c.date <= endStr) || null
+  }, [checkins])
+
   // 특정 task가 특정 주에 verified 체크된 횟수 (요일 기반 항목용)
   const verifiedCountInWeek = useCallback((taskId, weekDate) => {
     const { start, end } = getWeekRange(weekDate)
@@ -122,6 +130,7 @@ export function useCheckins() {
     toggleItemCheck,
     verifyCheck,
     forCheckin,
+    checkinForItem,
     verifiedCountInWeek,
     itemStatesInWeek,
     verifiedItemsCountInWeek,
