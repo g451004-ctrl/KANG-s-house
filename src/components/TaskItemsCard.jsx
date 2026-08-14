@@ -1,7 +1,7 @@
 import { computeEarned } from '../lib/earnings'
 
 // subitems(체크리스트)가 있는 항목용 카드. 요일 대신 항목명을 체크한다.
-export default function TaskItemsCard({ task, itemStates, verifiedCount, mode = 'view', onToggle }) {
+export default function TaskItemsCard({ task, itemStates, verifiedCount, mode = 'view', onToggle, onCancelVerify, checkinForItem, weekDate }) {
   const target = task.weekly_target
   const earned = computeEarned(task, verifiedCount)
   const achieved = task.per_completion ? verifiedCount > 0 : verifiedCount >= target
@@ -16,14 +16,26 @@ export default function TaskItemsCard({ task, itemStates, verifiedCount, mode = 
       <div className="task-card__items">
         {task.subitems.map((item) => {
           const state = itemStates[item] || 'empty'
-          const clickable = mode === 'child' && state !== 'verified'
+          const childClickable = mode === 'child' && state !== 'verified'
+          const parentCancelable = mode === 'view' && onCancelVerify && state === 'verified'
+          const clickable = childClickable || parentCancelable
+          const handleClick = () => {
+            if (childClickable) onToggle(task.id, item)
+            else if (parentCancelable) {
+              const checkin = checkinForItem?.(task.id, item, weekDate)
+              if (checkin && window.confirm('승인을 취소할까요? 취소하면 인증 대기 상태로 돌아가요.')) {
+                onCancelVerify(checkin.id)
+              }
+            }
+          }
           return (
             <button
               key={item}
               type="button"
               disabled={!clickable}
-              onClick={() => clickable && onToggle(task.id, item)}
-              className={`item-chip item-chip--${state}`}
+              onClick={handleClick}
+              className={`item-chip item-chip--${state} ${parentCancelable ? 'item-chip--cancelable' : ''}`}
+              title={parentCancelable ? '클릭해서 승인 취소' : undefined}
             >
               {item} {state === 'verified' ? '✓' : state === 'pending' ? '●' : ''}
             </button>
