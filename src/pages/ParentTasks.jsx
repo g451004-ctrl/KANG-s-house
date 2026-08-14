@@ -66,6 +66,7 @@ function TaskForm({ children, onSubmit, initial, onCancel }) {
   const [description, setDescription] = useState(initial?.description || '')
   const [amount, setAmount] = useState(initial?.amount ?? 1000)
   const [weeklyTarget, setWeeklyTarget] = useState(initial?.weekly_target ?? 7)
+  const [perCompletion, setPerCompletion] = useState(initial?.per_completion ?? false)
 
   const submit = async (e) => {
     e.preventDefault()
@@ -79,12 +80,14 @@ function TaskForm({ children, onSubmit, initial, onCancel }) {
       description: description.trim() || null,
       amount: Number(amount),
       weekly_target: Number(weeklyTarget),
+      per_completion: perCompletion,
     })
     if (!initial) {
       setName('')
       setDescription('')
       setAmount(1000)
       setWeeklyTarget(7)
+      setPerCompletion(false)
     }
   }
 
@@ -98,15 +101,27 @@ function TaskForm({ children, onSubmit, initial, onCancel }) {
       </div>
       <input className="input" placeholder="설명 (선택)" value={description} onChange={(e) => setDescription(e.target.value)} />
       <div className="task-form__row">
+        <label className="radio-field">
+          <input type="radio" checked={!perCompletion} onChange={() => setPerCompletion(false)} />
+          <span>목표 달성시 1회 지급</span>
+        </label>
+        <label className="radio-field">
+          <input type="radio" checked={perCompletion} onChange={() => setPerCompletion(true)} />
+          <span>할 때마다 매번 지급</span>
+        </label>
+      </div>
+      <div className="task-form__row">
         <label className="field">
-          <span>금액(원)</span>
+          <span>{perCompletion ? '1회당 금액(원)' : '금액(원)'}</span>
           <input className="input" type="number" min={0} step={100} value={amount} onChange={(e) => setAmount(e.target.value)} />
         </label>
         <label className="field">
-          <span>주당 필요 횟수</span>
+          <span>{perCompletion ? '주당 최대 인정 횟수' : '주당 필요 횟수'}</span>
           <select className="input" value={weeklyTarget} onChange={(e) => setWeeklyTarget(e.target.value)}>
             {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-              <option key={n} value={n}>{n}회 {n === 7 ? '(매일)' : n === 1 ? '(주 1회만 해도 지급)' : ''}</option>
+              <option key={n} value={n}>
+                {n}회{!perCompletion && n === 7 ? ' (매일)' : ''}{!perCompletion && n === 1 ? ' (주 1회만 해도 지급)' : ''}
+              </option>
             ))}
           </select>
         </label>
@@ -163,7 +178,9 @@ export default function ParentTasks({ children, tasks, tasksApi, childrenApi }) 
                 {childTasks.map((task) => (
                   <div key={task.id} className={`task-row ${!task.active ? 'task-row--inactive' : ''}`}>
                     <span className="task-row__name">{task.name}</span>
-                    <span className="task-row__meta">{task.amount.toLocaleString()}원 · 주 {task.weekly_target}회</span>
+                    <span className="task-row__meta">
+                      {task.amount.toLocaleString()}원{task.per_completion ? '/회' : ''} · 주 {task.weekly_target}회{task.per_completion ? ' 한도' : ''}
+                    </span>
                     <div className="task-row__actions">
                       <button type="button" className="btn btn--small" onClick={() => setEditingTask(task)}>수정</button>
                       <button type="button" className="btn btn--small" onClick={() => tasksApi.updateTask(task.id, { active: !task.active })}>

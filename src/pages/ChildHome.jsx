@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import WeekProgressCard from '../components/WeekProgressCard'
 import { addWeeks, formatWeekRangeLabel } from '../lib/dateUtils'
+import { computeEarned } from '../lib/earnings'
 
 export default function ChildHome({ child, tasksForChild, checkinsApi, onLogout }) {
   const [weekOffset, setWeekOffset] = useState(0)
@@ -8,10 +9,7 @@ export default function ChildHome({ child, tasksForChild, checkinsApi, onLogout 
   const tasks = tasksForChild(child.id)
   const { forCheckin, verifiedCountInWeek, toggleCheck } = checkinsApi
 
-  const total = tasks.reduce((sum, t) => {
-    const count = verifiedCountInWeek(t.id, weekDate)
-    return sum + (count >= t.weekly_target ? t.amount : 0)
-  }, 0)
+  const total = tasks.reduce((sum, t) => sum + computeEarned(t, verifiedCountInWeek(t.id, weekDate)), 0)
 
   const handleToggle = async (taskId, dateStr) => {
     const { error } = await toggleCheck(taskId, child.id, dateStr)

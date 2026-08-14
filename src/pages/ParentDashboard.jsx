@@ -1,5 +1,6 @@
 import WeekProgressCard from '../components/WeekProgressCard'
 import { formatWeekRangeLabel } from '../lib/dateUtils'
+import { computeEarned } from '../lib/earnings'
 
 const DAY_LABELS = { 0: '일', 1: '월', 2: '화', 3: '수', 4: '목', 5: '금', 6: '토' }
 
@@ -21,10 +22,7 @@ export default function ParentDashboard({ children, tasksForChild, checkinsApi }
         {children.map((child) => {
           const tasks = tasksForChild(child.id)
           const pending = pendingForChild(child.id)
-          const total = tasks.reduce((sum, t) => {
-            const count = verifiedCountInWeek(t.id, now)
-            return sum + (count >= t.weekly_target ? t.amount : 0)
-          }, 0)
+          const total = tasks.reduce((sum, t) => sum + computeEarned(t, verifiedCountInWeek(t.id, now)), 0)
 
           return (
             <div key={child.id} className="parent-column">

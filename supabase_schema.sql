@@ -15,6 +15,7 @@ create table tasks (
   description text,
   amount integer not null,
   weekly_target smallint not null check (weekly_target between 1 and 7),
+  per_completion boolean not null default false, -- true: 할 때마다 amount 지급(최대 weekly_target회), false: 목표 달성시 amount 1회 지급
   active boolean not null default true,
   created_at timestamptz default now()
 );

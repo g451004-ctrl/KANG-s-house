@@ -1,18 +1,20 @@
 import { getWeekDays, isFuture, formatDate } from '../lib/dateUtils'
+import { computeEarned } from '../lib/earnings'
 
 // task 하나의 한 주 진행 상황을 보여주는 카드.
 // mode='child' 이면 오늘/과거 칸을 탭해서 체크/취소 가능.
 export default function WeekProgressCard({ task, weekDate, forCheckin, verifiedCount, mode = 'view', onToggle }) {
   const days = getWeekDays(weekDate)
   const target = task.weekly_target
-  const achieved = verifiedCount >= target
+  const earned = computeEarned(task, verifiedCount)
+  const achieved = task.per_completion ? verifiedCount > 0 : verifiedCount >= target
   const todayStr = formatDate(new Date())
 
   return (
     <div className={`task-card ${achieved ? 'task-card--done' : ''}`}>
       <div className="task-card__head">
         <div className="task-card__name">{task.name}</div>
-        <div className="task-card__amount">{task.amount.toLocaleString()}원</div>
+        <div className="task-card__amount">{task.amount.toLocaleString()}원{task.per_completion ? '/회' : ''}</div>
       </div>
       {task.description && <div className="task-card__desc">{task.description}</div>}
       <div className="task-card__days">
@@ -42,8 +44,10 @@ export default function WeekProgressCard({ task, weekDate, forCheckin, verifiedC
         <div className="progress-bar">
           <div className="progress-bar__fill" style={{ width: `${Math.min(100, (verifiedCount / target) * 100)}%` }} />
         </div>
-        <span className="task-card__count">{verifiedCount} / {target}회</span>
-        {achieved && <span className="task-card__badge">달성!</span>}
+        <span className="task-card__count">{verifiedCount} / {target}회{task.per_completion ? ' (최대)' : ''}</span>
+        {task.per_completion
+          ? earned > 0 && <span className="task-card__badge">{earned.toLocaleString()}원 확정</span>
+          : achieved && <span className="task-card__badge">달성!</span>}
       </div>
     </div>
   )

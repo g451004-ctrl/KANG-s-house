@@ -1,4 +1,5 @@
 import { addWeeks, formatWeekRangeLabel } from '../lib/dateUtils'
+import { computeEarned } from '../lib/earnings'
 
 const WEEKS_TO_SHOW = 8
 
@@ -25,12 +26,14 @@ export default function ParentHistory({ children, tasksForChild, checkinsApi }) 
               </thead>
               <tbody>
                 {weeks.map((weekDate, i) => {
-                  const achievedTasks = tasks.filter((t) => verifiedCountInWeek(t.id, weekDate) >= t.weekly_target)
-                  const total = achievedTasks.reduce((sum, t) => sum + t.amount, 0)
+                  const earnedTasks = tasks
+                    .map((t) => ({ task: t, earned: computeEarned(t, verifiedCountInWeek(t.id, weekDate)) }))
+                    .filter(({ earned }) => earned > 0)
+                  const total = earnedTasks.reduce((sum, { earned }) => sum + earned, 0)
                   return (
                     <tr key={i} className={i === 0 ? 'history-table__current' : ''}>
                       <td>{formatWeekRangeLabel(weekDate)}{i === 0 ? ' (진행중)' : ''}</td>
-                      <td>{achievedTasks.length > 0 ? achievedTasks.map((t) => t.name).join(', ') : '-'}</td>
+                      <td>{earnedTasks.length > 0 ? earnedTasks.map(({ task, earned }) => `${task.name}(${earned.toLocaleString()}원)`).join(', ') : '-'}</td>
                       <td>{total.toLocaleString()}원</td>
                     </tr>
                   )

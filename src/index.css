@@ -241,6 +241,7 @@ button, input, select {
 
 .task-form { display: flex; flex-direction: column; gap: 10px; }
 .task-form__row { display: flex; gap: 10px; }
+.radio-field { display: flex; align-items: center; gap: 6px; font-size: 14px; }
 .task-form__row .field { flex: 1; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
 .task-form__actions { display: flex; gap: 8px; }
 
