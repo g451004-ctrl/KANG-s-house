@@ -12,7 +12,8 @@ function formatDateLabel(dateStr) {
 
 export default function ParentDashboard({ children, tasksForChild, checkinsApi }) {
   const now = new Date()
-  const { forCheckin, itemStatesInWeek, verifyCheck, pendingForChild } = checkinsApi
+  const { forCheckin, itemStatesInWeek, verifyCheck, pendingForChild, checkinForItem } = checkinsApi
+  const cancelVerify = (checkinId) => verifyCheck(checkinId, false)
 
   const taskLookup = (taskId, tasks) => tasks.find(t => t.id === taskId)
 
@@ -60,6 +61,9 @@ export default function ParentDashboard({ children, tasksForChild, checkinsApi }
                       itemStates={itemStatesInWeek(task.id, task.subitems, now)}
                       verifiedCount={getWeeklyCount(task, checkinsApi, now)}
                       mode="view"
+                      onCancelVerify={cancelVerify}
+                      checkinForItem={checkinForItem}
+                      weekDate={now}
                     />
                   ) : (
                     <WeekProgressCard
@@ -69,6 +73,7 @@ export default function ParentDashboard({ children, tasksForChild, checkinsApi }
                       forCheckin={forCheckin}
                       verifiedCount={getWeeklyCount(task, checkinsApi, now)}
                       mode="view"
+                      onCancelVerify={cancelVerify}
                     />
                   )
                 )}
