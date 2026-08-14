@@ -206,7 +206,9 @@ button, input, select {
 .day-cell--today { border-color: var(--primary); }
 .day-cell--future { opacity: 0.4; }
 .day-cell--off { opacity: 0.25; cursor: default; }
-
+.day-cell--cancelable { cursor: pointer; }
+.day-cell--cancelable:hover { background: #fef2f2; border-color: var(--danger, #ef4444); }
+.day-cell--cancelable:hover .day-cell__mark { color: var(--danger, #ef4444); }
 .task-card__items { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
 .item-chip {
   border: 2px solid var(--border);
@@ -219,7 +221,8 @@ button, input, select {
 .item-chip:disabled { cursor: default; }
 .item-chip--pending { background: #fff7ed; border-color: #fdba74; color: #f97316; }
 .item-chip--verified { background: #f0fdf4; border-color: var(--success); color: var(--success); }
-
+.item-chip--cancelable { cursor: pointer; }
+.item-chip--cancelable:hover { background: #fef2f2; border-color: var(--danger, #ef4444); color: var(--danger, #ef4444); }
 .task-card__footer { display: flex; align-items: center; gap: 10px; }
 .progress-bar { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
 .progress-bar__fill { height: 100%; background: var(--primary); }
