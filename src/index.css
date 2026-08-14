@@ -206,6 +206,19 @@ button, input, select {
 .day-cell--today { border-color: var(--primary); }
 .day-cell--future { opacity: 0.4; }
 
+.task-card__items { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.item-chip {
+  border: 2px solid var(--border);
+  background: var(--card);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.item-chip:disabled { cursor: default; }
+.item-chip--pending { background: #fff7ed; border-color: #fdba74; color: #f97316; }
+.item-chip--verified { background: #f0fdf4; border-color: var(--success); color: var(--success); }
+
 .task-card__footer { display: flex; align-items: center; gap: 10px; }
 .progress-bar { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
 .progress-bar__fill { height: 100%; background: var(--primary); }

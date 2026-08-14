@@ -6,3 +6,11 @@ export function computeEarned(task, verifiedCount) {
   }
   return verifiedCount >= task.weekly_target ? task.amount : 0
 }
+
+// task.subitems가 있으면 요일 대신 체크리스트(item) 단위로 집계
+export function getWeeklyCount(task, checkinsApi, weekDate) {
+  if (task.subitems?.length) {
+    return checkinsApi.verifiedItemsCountInWeek(task.id, task.subitems, weekDate)
+  }
+  return checkinsApi.verifiedCountInWeek(task.id, weekDate)
+}

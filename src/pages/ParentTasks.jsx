@@ -67,6 +67,10 @@ function TaskForm({ children, onSubmit, initial, onCancel }) {
   const [amount, setAmount] = useState(initial?.amount ?? 1000)
   const [weeklyTarget, setWeeklyTarget] = useState(initial?.weekly_target ?? 7)
   const [perCompletion, setPerCompletion] = useState(initial?.per_completion ?? false)
+  const [subitemsText, setSubitemsText] = useState(initial?.subitems?.join(', ') || '')
+
+  const subitems = subitemsText.split(',').map((s) => s.trim()).filter(Boolean)
+  const useSubitems = subitems.length > 0
 
   const submit = async (e) => {
     e.preventDefault()
@@ -79,8 +83,9 @@ function TaskForm({ children, onSubmit, initial, onCancel }) {
       name: name.trim(),
       description: description.trim() || null,
       amount: Number(amount),
-      weekly_target: Number(weeklyTarget),
-      per_completion: perCompletion,
+      weekly_target: useSubitems ? subitems.length : Number(weeklyTarget),
+      per_completion: useSubitems ? false : perCompletion,
+      subitems: useSubitems ? subitems : null,
     })
     if (!initial) {
       setName('')
@@ -88,6 +93,7 @@ function TaskForm({ children, onSubmit, initial, onCancel }) {
       setAmount(1000)
       setWeeklyTarget(7)
       setPerCompletion(false)
+      setSubitemsText('')
     }
   }
 
@@ -100,31 +106,44 @@ function TaskForm({ children, onSubmit, initial, onCancel }) {
         <input className="input" placeholder="항목 이름 (예: 방 청소)" value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <input className="input" placeholder="설명 (선택)" value={description} onChange={(e) => setDescription(e.target.value)} />
-      <div className="task-form__row">
-        <label className="radio-field">
-          <input type="radio" checked={!perCompletion} onChange={() => setPerCompletion(false)} />
-          <span>목표 달성시 1회 지급</span>
-        </label>
-        <label className="radio-field">
-          <input type="radio" checked={perCompletion} onChange={() => setPerCompletion(true)} />
-          <span>할 때마다 매번 지급</span>
-        </label>
-      </div>
+      <label className="field">
+        <span>체크 항목 (쉼표로 구분, 비워두면 요일별 체크로 동작 — 예: 영어, 수학)</span>
+        <input className="input" placeholder="비워두면 요일 기준" value={subitemsText} onChange={(e) => setSubitemsText(e.target.value)} />
+      </label>
+      {!useSubitems && (
+        <div className="task-form__row">
+          <label className="radio-field">
+            <input type="radio" checked={!perCompletion} onChange={() => setPerCompletion(false)} />
+            <span>목표 달성시 1회 지급</span>
+          </label>
+          <label className="radio-field">
+            <input type="radio" checked={perCompletion} onChange={() => setPerCompletion(true)} />
+            <span>할 때마다 매번 지급</span>
+          </label>
+        </div>
+      )}
       <div className="task-form__row">
         <label className="field">
           <span>{perCompletion ? '1회당 금액(원)' : '금액(원)'}</span>
           <input className="input" type="number" min={0} step={100} value={amount} onChange={(e) => setAmount(e.target.value)} />
         </label>
-        <label className="field">
-          <span>{perCompletion ? '주당 최대 인정 횟수' : '주당 필요 횟수'}</span>
-          <select className="input" value={weeklyTarget} onChange={(e) => setWeeklyTarget(e.target.value)}>
-            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-              <option key={n} value={n}>
-                {n}회{!perCompletion && n === 7 ? ' (매일)' : ''}{!perCompletion && n === 1 ? ' (주 1회만 해도 지급)' : ''}
-              </option>
-            ))}
-          </select>
-        </label>
+        {useSubitems ? (
+          <label className="field">
+            <span>주당 필요 개수</span>
+            <input className="input" value={`${subitems.length}개 (모두 체크해야 지급)`} disabled />
+          </label>
+        ) : (
+          <label className="field">
+            <span>{perCompletion ? '주당 최대 인정 횟수' : '주당 필요 횟수'}</span>
+            <select className="input" value={weeklyTarget} onChange={(e) => setWeeklyTarget(e.target.value)}>
+              {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                <option key={n} value={n}>
+                  {n}회{!perCompletion && n === 7 ? ' (매일)' : ''}{!perCompletion && n === 1 ? ' (주 1회만 해도 지급)' : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
       <div className="task-form__actions">
         <button type="submit" className="btn btn--primary">{initial ? '수정 완료' : '항목 추가'}</button>
@@ -179,7 +198,9 @@ export default function ParentTasks({ children, tasks, tasksApi, childrenApi }) 
                   <div key={task.id} className={`task-row ${!task.active ? 'task-row--inactive' : ''}`}>
                     <span className="task-row__name">{task.name}</span>
                     <span className="task-row__meta">
-                      {task.amount.toLocaleString()}원{task.per_completion ? '/회' : ''} · 주 {task.weekly_target}회{task.per_completion ? ' 한도' : ''}
+                      {task.subitems?.length
+                        ? `${task.amount.toLocaleString()}원 · 체크리스트(${task.subitems.join('/')}) 모두 완료시 지급`
+                        : `${task.amount.toLocaleString()}원${task.per_completion ? '/회' : ''} · 주 ${task.weekly_target}회${task.per_completion ? ' 한도' : ''}`}
                     </span>
                     <div className="task-row__actions">
                       <button type="button" className="btn btn--small" onClick={() => setEditingTask(task)}>수정</button>

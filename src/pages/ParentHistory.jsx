@@ -1,10 +1,9 @@
 import { addWeeks, formatWeekRangeLabel } from '../lib/dateUtils'
-import { computeEarned } from '../lib/earnings'
+import { computeEarned, getWeeklyCount } from '../lib/earnings'
 
 const WEEKS_TO_SHOW = 8
 
 export default function ParentHistory({ children, tasksForChild, checkinsApi }) {
-  const { verifiedCountInWeek } = checkinsApi
   const now = new Date()
   const weeks = Array.from({ length: WEEKS_TO_SHOW }, (_, i) => addWeeks(now, -i))
 
@@ -27,7 +26,7 @@ export default function ParentHistory({ children, tasksForChild, checkinsApi }) 
               <tbody>
                 {weeks.map((weekDate, i) => {
                   const earnedTasks = tasks
-                    .map((t) => ({ task: t, earned: computeEarned(t, verifiedCountInWeek(t.id, weekDate)) }))
+                    .map((t) => ({ task: t, earned: computeEarned(t, getWeeklyCount(t, checkinsApi, weekDate)) }))
                     .filter(({ earned }) => earned > 0)
                   const total = earnedTasks.reduce((sum, { earned }) => sum + earned, 0)
                   return (

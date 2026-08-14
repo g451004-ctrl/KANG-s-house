@@ -1,6 +1,7 @@
 import WeekProgressCard from '../components/WeekProgressCard'
+import TaskItemsCard from '../components/TaskItemsCard'
 import { formatWeekRangeLabel } from '../lib/dateUtils'
-import { computeEarned } from '../lib/earnings'
+import { computeEarned, getWeeklyCount } from '../lib/earnings'
 
 const DAY_LABELS = { 0: '일', 1: '월', 2: '화', 3: '수', 4: '목', 5: '금', 6: '토' }
 
@@ -11,7 +12,7 @@ function formatDateLabel(dateStr) {
 
 export default function ParentDashboard({ children, tasksForChild, checkinsApi }) {
   const now = new Date()
-  const { forCheckin, verifiedCountInWeek, verifyCheck, pendingForChild } = checkinsApi
+  const { forCheckin, itemStatesInWeek, verifyCheck, pendingForChild } = checkinsApi
 
   const taskLookup = (taskId, tasks) => tasks.find(t => t.id === taskId)
 
@@ -22,7 +23,7 @@ export default function ParentDashboard({ children, tasksForChild, checkinsApi }
         {children.map((child) => {
           const tasks = tasksForChild(child.id)
           const pending = pendingForChild(child.id)
-          const total = tasks.reduce((sum, t) => sum + computeEarned(t, verifiedCountInWeek(t.id, now)), 0)
+          const total = tasks.reduce((sum, t) => sum + computeEarned(t, getWeeklyCount(t, checkinsApi, now)), 0)
 
           return (
             <div key={child.id} className="parent-column">
@@ -39,7 +40,7 @@ export default function ParentDashboard({ children, tasksForChild, checkinsApi }
                     if (!task) return null
                     return (
                       <div key={c.id} className="pending-item">
-                        <span>{task.name} · {formatDateLabel(c.date)}</span>
+                        <span>{task.name} · {c.item ? c.item : formatDateLabel(c.date)}</span>
                         <div className="pending-item__actions">
                           <button type="button" className="btn btn--small btn--primary" onClick={() => verifyCheck(c.id, true)}>승인</button>
                         </div>
@@ -51,16 +52,26 @@ export default function ParentDashboard({ children, tasksForChild, checkinsApi }
 
               <div className="task-list">
                 {tasks.length === 0 && <p className="empty-msg">등록된 항목이 없어요.</p>}
-                {tasks.map((task) => (
-                  <WeekProgressCard
-                    key={task.id}
-                    task={task}
-                    weekDate={now}
-                    forCheckin={forCheckin}
-                    verifiedCount={verifiedCountInWeek(task.id, now)}
-                    mode="view"
-                  />
-                ))}
+                {tasks.map((task) =>
+                  task.subitems?.length ? (
+                    <TaskItemsCard
+                      key={task.id}
+                      task={task}
+                      itemStates={itemStatesInWeek(task.id, task.subitems, now)}
+                      verifiedCount={getWeeklyCount(task, checkinsApi, now)}
+                      mode="view"
+                    />
+                  ) : (
+                    <WeekProgressCard
+                      key={task.id}
+                      task={task}
+                      weekDate={now}
+                      forCheckin={forCheckin}
+                      verifiedCount={getWeeklyCount(task, checkinsApi, now)}
+                      mode="view"
+                    />
+                  )
+                )}
               </div>
             </div>
           )

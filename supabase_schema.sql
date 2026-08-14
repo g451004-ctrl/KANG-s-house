@@ -16,6 +16,7 @@ create table tasks (
   amount integer not null,
   weekly_target smallint not null check (weekly_target between 1 and 7),
   per_completion boolean not null default false, -- true: 할 때마다 amount 지급(최대 weekly_target회), false: 목표 달성시 amount 1회 지급
+  subitems text[], -- 설정시 요일 대신 이 목록을 체크리스트로 사용 (예: ['영어','수학'])
   active boolean not null default true,
   created_at timestamptz default now()
 );
@@ -26,10 +27,11 @@ create table checkins (
   task_id uuid not null references tasks(id) on delete cascade,
   child_id uuid not null references children(id) on delete cascade,
   date date not null,
+  item text not null default '', -- subitems 기반 항목일 때 체크리스트 항목명 (요일 기반이면 빈 문자열)
   checked_at timestamptz,
   verified boolean not null default false,
   verified_at timestamptz,
-  unique (task_id, date)
+  unique (task_id, date, item)
 );
 
 create index checkins_child_date_idx on checkins(child_id, date);
