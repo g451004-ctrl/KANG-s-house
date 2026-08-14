@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 const COLORS = ['#6366f1', '#ec4899', '#22c55e', '#f97316', '#0ea5e9', '#a855f7']
+const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
 
 function ChildManager({ children, addChild, updateChild, deleteChild }) {
   const [name, setName] = useState('')
@@ -68,14 +69,24 @@ function TaskForm({ children, onSubmit, initial, onCancel }) {
   const [weeklyTarget, setWeeklyTarget] = useState(initial?.weekly_target ?? 7)
   const [perCompletion, setPerCompletion] = useState(initial?.per_completion ?? false)
   const [subitemsText, setSubitemsText] = useState(initial?.subitems?.join(', ') || '')
+  const [activeDays, setActiveDays] = useState(initial?.active_days ?? [0, 1, 2, 3, 4, 5, 6])
 
   const subitems = subitemsText.split(',').map((s) => s.trim()).filter(Boolean)
   const useSubitems = subitems.length > 0
+  const restrictedDays = activeDays.length > 0 && activeDays.length < 7
+
+  const toggleDay = (idx) => {
+    setActiveDays((prev) => (prev.includes(idx) ? prev.filter((d) => d !== idx) : [...prev, idx].sort()))
+  }
 
   const submit = async (e) => {
     e.preventDefault()
     if (!childId || !name.trim() || amount <= 0) {
       alert('자녀, 항목명, 금액을 확인해주세요')
+      return
+    }
+    if (!useSubitems && activeDays.length === 0) {
+      alert('요일을 최소 1개 이상 선택해주세요')
       return
     }
     await onSubmit({
@@ -86,6 +97,7 @@ function TaskForm({ children, onSubmit, initial, onCancel }) {
       weekly_target: useSubitems ? subitems.length : Number(weeklyTarget),
       per_completion: useSubitems ? false : perCompletion,
       subitems: useSubitems ? subitems : null,
+      active_days: useSubitems || !restrictedDays ? null : activeDays,
     })
     if (!initial) {
       setName('')
@@ -94,6 +106,7 @@ function TaskForm({ children, onSubmit, initial, onCancel }) {
       setWeeklyTarget(7)
       setPerCompletion(false)
       setSubitemsText('')
+      setActiveDays([0, 1, 2, 3, 4, 5, 6])
     }
   }
 
@@ -111,16 +124,33 @@ function TaskForm({ children, onSubmit, initial, onCancel }) {
         <input className="input" placeholder="비워두면 요일 기준" value={subitemsText} onChange={(e) => setSubitemsText(e.target.value)} />
       </label>
       {!useSubitems && (
-        <div className="task-form__row">
-          <label className="radio-field">
-            <input type="radio" checked={!perCompletion} onChange={() => setPerCompletion(false)} />
-            <span>목표 달성시 1회 지급</span>
+        <>
+          <div className="task-form__row">
+            <label className="radio-field">
+              <input type="radio" checked={!perCompletion} onChange={() => setPerCompletion(false)} />
+              <span>목표 달성시 1회 지급</span>
+            </label>
+            <label className="radio-field">
+              <input type="radio" checked={perCompletion} onChange={() => setPerCompletion(true)} />
+              <span>할 때마다 매번 지급</span>
+            </label>
+          </div>
+          <label className="field">
+            <span>적용 요일 (해제하면 그 요일은 체크 불가)</span>
+            <div className="day-picker">
+              {DAY_LABELS.map((label, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`day-toggle ${activeDays.includes(idx) ? 'day-toggle--on' : ''}`}
+                  onClick={() => toggleDay(idx)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </label>
-          <label className="radio-field">
-            <input type="radio" checked={perCompletion} onChange={() => setPerCompletion(true)} />
-            <span>할 때마다 매번 지급</span>
-          </label>
-        </div>
+        </>
       )}
       <div className="task-form__row">
         <label className="field">
@@ -200,7 +230,7 @@ export default function ParentTasks({ children, tasks, tasksApi, childrenApi }) 
                     <span className="task-row__meta">
                       {task.subitems?.length
                         ? `${task.amount.toLocaleString()}원 · 체크리스트(${task.subitems.join('/')}) 모두 완료시 지급`
-                        : `${task.amount.toLocaleString()}원${task.per_completion ? '/회' : ''} · 주 ${task.weekly_target}회${task.per_completion ? ' 한도' : ''}`}
+                        : `${task.amount.toLocaleString()}원${task.per_completion ? '/회' : ''} · 주 ${task.weekly_target}회${task.per_completion ? ' 한도' : ''}${task.active_days?.length ? ` · ${task.active_days.map((d) => DAY_LABELS[d]).join('')}만` : ''}`}
                     </span>
                     <div className="task-row__actions">
                       <button type="button" className="btn btn--small" onClick={() => setEditingTask(task)}>수정</button>

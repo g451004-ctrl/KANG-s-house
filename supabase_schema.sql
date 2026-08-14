@@ -17,6 +17,7 @@ create table tasks (
   weekly_target smallint not null check (weekly_target between 1 and 7),
   per_completion boolean not null default false, -- true: 할 때마다 amount 지급(최대 weekly_target회), false: 목표 달성시 amount 1회 지급
   subitems text[], -- 설정시 요일 대신 이 목록을 체크리스트로 사용 (예: ['영어','수학'])
+  active_days smallint[], -- 설정시 이 요일에만 체크 가능 (0=월 ... 6=일). null이면 전체 요일 가능
   active boolean not null default true,
   created_at timestamptz default now()
 );

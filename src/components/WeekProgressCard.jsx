@@ -18,7 +18,16 @@ export default function WeekProgressCard({ task, weekDate, forCheckin, verifiedC
       </div>
       {task.description && <div className="task-card__desc">{task.description}</div>}
       <div className="task-card__days">
-        {days.map(({ dateStr, label }) => {
+        {days.map(({ dateStr, label }, dayIndex) => {
+          const inactive = task.active_days && !task.active_days.includes(dayIndex)
+          if (inactive) {
+            return (
+              <div key={dateStr} className="day-cell day-cell--off" title="해당 없음">
+                <span className="day-cell__label">{label}</span>
+                <span className="day-cell__mark">－</span>
+              </div>
+            )
+          }
           const checkin = forCheckin(task.id, dateStr)
           const future = isFuture(dateStr)
           const state = checkin?.verified ? 'verified' : checkin?.checked_at ? 'pending' : 'empty'
